@@ -200,7 +200,18 @@ namespace WebSocketSharp
             _onClose = onClose ?? (c => AsyncEx.Completed());
             _sslConfig = sslAuthConfiguration;
             _cancellationToken = cancellationToken;
-            _registration = _cancellationToken.Register(async () => await Close().ConfigureAwait(false));
+            _registration = _cancellationToken.Register(
+                async () =>
+                    {
+                        try
+                        {
+                            await Close().ConfigureAwait(false);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            // ignore
+                        }
+                    });
             _base64Key = CreateBase64Key();
             _client = true;
             _secure = _uri.Scheme == "wss";
